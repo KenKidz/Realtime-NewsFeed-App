@@ -49,13 +49,13 @@ export const useDataStore = defineStore('dataStore', {
       this.total_posts += increment
     },
 
-    fetchPosts(limit=null){
+    async fetchPosts(limit: number | null = null){
       const query =`*[_type == "post"] { ..., author-> } | order(_createdAt desc) ${limit ? `[0...${limit}]` : ''}`
-      sanity.fetch(query).then(posts => {
+      await sanity.fetch(query).then(posts => {
         this.setPost(posts)
       })
       const count_query = 'count(*[_type == "post"])'
-      sanity.fetch(count_query).then(count => {
+      await sanity.fetch(count_query).then(count => {
         this.setTotalPosts(count)
       })
     },
@@ -74,9 +74,9 @@ export const useDataStore = defineStore('dataStore', {
       this.incrementTotalPosts(-1)
     },
 
-    loadMorePost(limit = 10) {
+    async loadMorePost(limit = 10) {
       const query = `*[_type == "post"] { ..., author-> } | order(_createdAt desc) [${this.posts.length}... ${this.posts.length + limit}]`
-      sanity.fetch(query).then(posts => {
+      await sanity.fetch(query).then(posts => {
         this.setPost([...this.posts, ...posts])
       })
     },

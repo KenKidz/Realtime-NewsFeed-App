@@ -22,8 +22,8 @@
       </div>
     </section>
 
-    <section v-else>
-      <p class="text-white italic text-2xl">loading...</p>
+    <section class="flex items-center justify-center" v-else>
+      <VIcon icon="svg-spinners:3-dots-scale-middle" class="text-5xl" />
     </section>
   </main>
 </template>
@@ -41,7 +41,6 @@ onMounted(() => {
   const params = { id: id.value }
 
   sanity.fetch(query, params).then(data => {
-    console.log(data)
     post.value = data
   })
 })

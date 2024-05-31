@@ -5,10 +5,9 @@
       <div class="grid gap-4">
         <PostCard v-for="(post, i) in posts" :key="i" :post="post" />
       </div>
-
-      <button v-if="store.total_posts > posts.length" class="btn mt-8" @click="loadMorePost" >
-        Load More ({{store.total_posts - posts.length}})
-      </button>
+      <div v-if="loading" class="flex items-center justify-center mt-4">
+        <VIcon icon="svg-spinners:3-dots-scale-middle" class="text-white text-4xl" />
+      </div>
     </section>
   </main>
 </template>
@@ -18,12 +17,24 @@ import { useDataStore } from '@/stores'
 import sanity from '@/utils/client'
 
 const store = useDataStore()
+const sentinel = ref(null);
 const subscription = ref<any>(null)
+const loading = ref<boolean>(false)
 
 const posts = computed(() => store._posts)
 
-onMounted(() => {
-  store.fetchPosts(3)
+onMounted(async () => {
+  window.addEventListener('scroll', handleScroll);
+  await loadItems()
+})
+
+onUnmounted(() => {
+  subscription.value.unsubscribe()
+  window.removeEventListener('scroll', handleScroll);
+})
+
+const loadItems = async () => {
+  await store.fetchPosts(3)
   const query = '*[_type == "post"]'
   subscription.value = sanity.listen(query).subscribe(update => {
     switch (update.transition) {
@@ -44,11 +55,16 @@ onMounted(() => {
         break
     }
   })
-})
+}
 
-onUnmounted(() => {
-  subscription.value.unsubscribe()
-})
+const handleScroll = async () => {
+  const bottomOfWindow = Math.round(document.documentElement.scrollTop) + window.innerHeight >= document.documentElement.offsetHeight - 10;
+  if (bottomOfWindow && !loading.value && store.total_posts !== posts.value.length) {
+    loading.value = true
+    await store.loadMorePost(1)
+    loading.value = false
+  }
+}
 
 const loadMorePost = () => {
   store.loadMorePost(1)
